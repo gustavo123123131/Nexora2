@@ -8,8 +8,8 @@ router = APIRouter()
 
 
 def event(app, action, uid):
-    app.state.events.append({"time": stamp(), "action": action, "profile_id": uid})
-    app.state.events[:] = app.state.events[-300:]
+    from .events import record
+    record(app, action, uid)
 
 
 @router.post("/profiles/{uid}/start")
