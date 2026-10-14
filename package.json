@@ -1,0 +1,6 @@
+{
+  "name": "nexora2-local-ui",
+  "private": true,
+  "type": "module",
+  "description": "Static dashboard; no npm runtime dependencies"
+}
