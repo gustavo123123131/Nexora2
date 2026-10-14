@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="nexora-token" content="__LOCAL_TOKEN__">
+<meta name="color-scheme" content="dark">
+<title>Nexora Mobile — Gerenciador de Perfis</title>
+<link rel="stylesheet" href="/styles.css">
+<script defer src="/app.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-logo">N<span>✦</span></div><div><strong>NEXORA</strong><small>MOBILE MANAGER</small></div></div>
+    <div class="nav-section">WORKSPACE</div>
+    <nav id="navigation" aria-label="Navegação principal">
+      <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◫</span><span>Visão geral</span></button>
+      <button class="nav-item" data-page="profiles"><span class="nav-icon">▦</span><span>Perfis</span><span class="nav-counter" id="navProfiles">0</span></button>
+      <button class="nav-item" data-page="proxies"><span class="nav-icon">◎</span><span>Proxies</span></button>
+      <button class="nav-item" data-page="devices"><span class="nav-icon">▯</span><span>Dispositivos</span></button>
+    </nav>
+    <div class="nav-section settings-section">SISTEMA</div>
+    <nav><button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span><span>Configurações</span></button>
+    <button class="nav-item" data-page="diagnostics"><span class="nav-icon">☰</span><span>Diagnósticos</span></button></nav>
+    <div class="sidebar-bottom"><div class="connection-pill"><span class="pulse"></span> Conexão local protegida</div><div class="version">NEXORA v0.1 · Beta local</div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb">Visão geral</strong></div>
+      <div class="topbar-actions"><span class="local-badge">●&nbsp; LOCALHOST</span><button id="refreshBtn" class="icon-btn" title="Atualizar dados" aria-label="Atualizar dados">↻</button><div class="avatar">N</div></div></header>
+    <main id="content" tabindex="-1"><div class="loading">Carregando ambiente local…</div></main>
+  </div>
+</div>
+<div id="modalLayer" class="modal-layer" hidden></div>
+<div id="toastStack" class="toast-stack" role="status" aria-live="polite"></div>
+</body>
+</html>
