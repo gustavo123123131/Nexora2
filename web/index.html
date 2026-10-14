@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexora2 — Multi-Login Mobile</title>
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/components.css"></head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+<div class="brand"><div class="brand-icon">N</div><div><strong>NEXORA<span>2</span></strong><small>MULTI-LOGIN MOBILE</small></div></div>
+<div class="nav-label">GERENCIAMENTO</div><nav id="navigation">
+<button class="nav active" data-page="dashboard">◈ &nbsp; Visão geral</button>
+<button class="nav" data-page="profiles">▣ &nbsp; Perfis</button>
+<button class="nav" data-page="proxies">⇄ &nbsp; Proxies</button>
+<button class="nav" data-page="devices">▥ &nbsp; Dispositivos</button>
+<div class="nav-label nav-divider">SISTEMA</div>
+<button class="nav" data-page="settings">⚙ &nbsp; Configurações</button>
+<button class="nav" data-page="diagnostics">◎ &nbsp; Diagnóstico</button>
+<button class="nav" data-page="logs">≡ &nbsp; Eventos</button></nav>
+<div class="sidebar-bottom"><div class="live-dot"></div><div><b>Gerenciamento local</b><small>Somente neste computador</small></div></div>
+</aside>
+<section class="workspace"><header class="topbar"><div>WORKSPACE <span>/</span> <b id="breadcrumb">VISÃO GERAL</b></div>
+<div><span class="env-chip">● localhost</span><button id="refreshBtn" class="button quiet">↻ Atualizar</button></div></header>
+<main class="main"><div class="page-heading"><div><div class="eyebrow">PAINEL DE CONTROLE</div><h1 id="pageTitle">Visão geral</h1>
+<p id="pageDescription">Perfis móveis e sessões locais independentes.</p></div><div id="pageActions"></div></div>
+<div id="content">Carregando…</div></main></section></div>
+<dialog id="dialog"><div id="dialogContent"></div></dialog><div id="toast" role="status"></div>
+<script>window.NEXORA_TOKEN=__NEXORA_TOKEN__;</script><script type="module" src="/static/app.js"></script>
+</body></html>
