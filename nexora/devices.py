@@ -12,16 +12,28 @@ PRESETS = {
 }
 
 
-def catalog():
+def catalog(store=None):
     with sync_playwright() as p:
-        return [{**{'id': key}, **entry,
-                 'viewport': p.devices[entry['device']]['viewport'],
-                 'device_scale_factor': p.devices[entry['device']]['device_scale_factor']}
-                for key, entry in PRESETS.items() if entry['device'] in p.devices]
+        result = [{**{'id': key, 'custom': False}, **entry,
+                  'viewport': p.devices[entry['device']]['viewport'],
+                  'device_scale_factor': p.devices[entry['device']]['device_scale_factor']}
+                  for key, entry in PRESETS.items() if entry['device'] in p.devices]
+        if store:
+            for c in store.list_custom_devices():
+                base = next((item for item in result if item['id'] == c['base_id']), None)
+                if base:
+                    result.append({**base, 'id': c['id'], 'label': c['label'],
+                                   'custom': True, 'base_id': c['base_id'],
+                                   'viewport': {'width': c['width'], 'height': c['height']}})
+        return result
 
 
-def resolve(p, preset_id):
+def resolve(p, preset_id, store=None):
     preset = PRESETS.get(preset_id)
+    if not preset and store:
+        custom = store.get_custom_device(preset_id)
+        if custom:
+            preset = PRESETS.get(custom['base_id'])
     if not preset or preset['device'] not in p.devices:
         raise ValueError('Modelo de dispositivo indisponível nesta versão do Playwright')
     return preset, dict(p.devices[preset['device']])

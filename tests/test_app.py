@@ -74,6 +74,9 @@ def test_security(setup):
     assert c.get('/app.js').status_code==200
     assert c.get('/styles.css').status_code==200
     assert c.post('/api/profiles',headers=h,json={'name':'x'}).status_code==422
+    sensitive=c.post('/api/proxies',headers=h,json={'name':'P','scheme':'http','host':'localhost','port':8000,'password':'secret-'+'x'*600})
+    assert sensitive.status_code==422
+    assert 'secret-' not in sensitive.text
 
 
 def test_proxy_import_and_redaction(setup):
@@ -111,6 +114,24 @@ def test_settings_and_limit(setup):
     assert c.put('/api/settings',headers=h,json={'max_running':0,'warn_shared_proxy':True}).status_code==422
     assert c.put('/api/settings',headers=h,json={'max_running':1,'warn_shared_proxy':False}).status_code==200
     assert c.get('/api/dashboard',headers=h).json()['max_running']==1
+
+
+def test_custom_device_and_diagnostics(setup):
+    c,h,_=setup
+    d=device(c,h)
+    res=c.post('/api/devices',headers=h,json={'label':'QA Phone','base_id':d['id'],
+                                              'width':400,'height':860})
+    assert res.status_code==201,res.text
+    custom=res.json()
+    assert custom['id'].startswith('custom-')
+    assert any(x['id']==custom['id'] for x in c.get('/api/devices',headers=h).json())
+    p=c.post('/api/profiles',headers=h,json={**profile_payload(d),'device_id':custom['id']}).json()
+    assert c.delete('/api/devices/'+custom['id'],headers=h).status_code==409
+    assert c.delete('/api/profiles/'+p['id'],headers=h).status_code==200
+    assert c.delete('/api/devices/'+custom['id'],headers=h).status_code==200
+    diagnostic=c.get('/api/diagnostics',headers=h).json()
+    assert diagnostic['ram_total_mb']>0
+    assert diagnostic['ram_available_mb']>0
 
 
 def test_parser():

@@ -3,6 +3,7 @@ import os
 import shutil
 import threading
 import json
+import psutil
 from concurrent.futures import ThreadPoolExecutor
 from playwright.sync_api import sync_playwright
 from .devices import resolve
@@ -52,10 +53,13 @@ class BrowserManager:
         limit = self.store.settings()['max_running']
         if self.running() >= limit:
             raise ValueError(f'Limite de {limit} perfis simultâneos atingido')
+        available_mb = int(psutil.virtual_memory().available / (1024 ** 2))
+        if available_mb < self.store.settings()['min_free_mb']:
+            raise ValueError(f'Memória insuficiente: {available_mb} MB livres. Reduza os perfis ativos.')
         self._set(profile_id, 'starting')
         try:
             p = self._get_playwright()
-            preset, device = resolve(p, item['device_id'])
+            preset, device = resolve(p, item['device_id'], self.store)
             device.pop('default_browser_type', None)
             device.update(viewport={'width': item['width'], 'height': item['height']},
                           locale=item['locale'], timezone_id=item['timezone'])

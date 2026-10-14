@@ -32,9 +32,9 @@ Os cookies/localStorage/IndexedDB de cada perfil ficam em `~/.nexora-mobile/brow
 ## Funcionalidades
 
 - Criar, editar, duplicar (sem copiar cookies), apagar, iniciar e encerrar perfis.
-- Dispositivos Playwright Android/Chromium e iPhone/WebKit, viewport, locale, fuso IANA, tags, grupos.
+- Dispositivos Playwright Android/Chromium e iPhone/WebKit, inclusive modelos personalizados derivados de presets oficiais, viewport, locale, fuso IANA, tags, grupos.
 - Proxies individuais HTTP e SOCKS5 com autenticação opcional, importação, teste manual em `https://api.ipify.org?format=json`, e aviso de compartilhamento de proxy.
-- Limite de 1 a 30 perfis simultâneos; padrão 3. Limite é **quantidade**, não reserva de memória. Verifique RAM/CPU antes de aumentar.
+- Limite de 1 a 30 perfis simultâneos; padrão 3. Bloqueio por memória RAM livre mínima configurável (512 MB por padrão), com telemetria básica de RAM/CPU. O número de perfis não reserva memória, monitore RAM/CPU antes de aumentar.
 - Dashboard, busca, filtros, ações e diagnósticos.
 - Sessões persistentes por diretório; status em execução é volátil, corretamente resetado após reiniciar.
 
@@ -45,7 +45,8 @@ Cada endpoint `/api/*` exige `X-Nexora-Token`, incluído somente na interface se
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/dashboard` | Contadores e status |
-| GET | `/api/devices` | Presets Playwright disponíveis |
+| GET/POST | `/api/devices` | Presets Playwright e criação de modelos derivados |
+| DELETE | `/api/devices/{id}` | Excluir modelo personalizado não utilizado |
 | GET/POST | `/api/profiles` | Listar/criar perfil |
 | PUT/DELETE | `/api/profiles/{id}` | Alterar/excluir e apagar dados do perfil |
 | POST | `/api/profiles/{id}/duplicate` | Duplicar sem sessão |

@@ -52,6 +52,11 @@ class Store:
                 proxy_id TEXT REFERENCES proxies(id) ON DELETE SET NULL,
                 created_at TEXT NOT NULL, updated_at TEXT NOT NULL
               );
+              CREATE TABLE IF NOT EXISTS custom_devices (
+                id TEXT PRIMARY KEY, label TEXT NOT NULL,
+                base_id TEXT NOT NULL, width INTEGER NOT NULL,
+                height INTEGER NOT NULL, created_at TEXT NOT NULL
+              );
               CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
               CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL,
@@ -60,6 +65,7 @@ class Store:
             ''')
             db.execute("INSERT OR IGNORE INTO settings VALUES ('max_running', '3')")
             db.execute("INSERT OR IGNORE INTO settings VALUES ('warn_shared_proxy', 'true')")
+            db.execute("INSERT OR IGNORE INTO settings VALUES ('min_free_mb', '512')")
 
     def settings(self):
         with self.db() as db:
@@ -81,6 +87,29 @@ class Store:
     def logs(self, limit=100):
         with self.db() as db:
             return [dict(r) for r in db.execute('SELECT * FROM logs ORDER BY id DESC LIMIT ?', (limit,))]
+
+    def list_custom_devices(self):
+        with self.db() as db:
+            return [dict(r) for r in db.execute('SELECT * FROM custom_devices ORDER BY label')]
+
+    def get_custom_device(self, device_id):
+        with self.db() as db:
+            row = db.execute('SELECT * FROM custom_devices WHERE id=?', (device_id,)).fetchone()
+        return dict(row) if row else None
+
+    def create_custom_device(self, label, base_id, width, height):
+        device_id = 'custom-' + str(uuid.uuid4())
+        with self.db() as db:
+            db.execute('INSERT INTO custom_devices(id,label,base_id,width,height,created_at) VALUES (?,?,?,?,?,?)',
+                       (device_id,label,base_id,width,height,now()))
+        return self.get_custom_device(device_id)
+
+    def delete_custom_device(self, device_id):
+        with self.db() as db:
+            if db.execute('SELECT 1 FROM profiles WHERE device_id=?', (device_id,)).fetchone():
+                raise ValueError('Dispositivo está sendo utilizado em um perfil')
+            cur = db.execute('DELETE FROM custom_devices WHERE id=?', (device_id,))
+        return bool(cur.rowcount)
 
     def list_profiles(self):
         with self.db() as db:

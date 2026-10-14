@@ -10,7 +10,8 @@ import socket
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Header, HTTPException, Request, Depends
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field, field_validator
 from .storage import Store
 from .browser import BrowserManager
@@ -50,6 +51,13 @@ class ProfileInput(BaseModel):
         return value
 
 
+class DeviceInput(BaseModel):
+    label: str = Field(min_length=2, max_length=80)
+    base_id: str
+    width: int = Field(ge=200, le=3000)
+    height: int = Field(ge=300, le=4000)
+
+
 class ProxyInput(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     scheme: str = 'http'
@@ -71,6 +79,7 @@ class ProxyImport(BaseModel):
 class SettingsInput(BaseModel):
     max_running: int = Field(ge=1, le=30)
     warn_shared_proxy: bool = True
+    min_free_mb: int = Field(default=512, ge=128, le=16384)
 
 
 def create_app(data_dir=None, headless=False):
@@ -86,6 +95,12 @@ def create_app(data_dir=None, headless=False):
 
     app = FastAPI(title='Nexora Mobile', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.store, app.state.manager, app.state.token = store, manager, token
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_input(request, exc):
+        # Pydantic exceptions include `input` by default: it may contain passwords.
+        # Reject without echoing any submitted body, query or credentials.
+        return JSONResponse(status_code=422, content={'detail': 'Dados inválidos: confira os campos e formatos.'})
 
     @app.middleware('http')
     async def secure_host(request: Request, call_next):
@@ -138,7 +153,23 @@ def create_app(data_dir=None, headless=False):
 
     @app.get('/api/devices', dependencies=[auth])
     def devices():
-        return catalog()
+        return catalog(store)
+
+    @app.post('/api/devices', dependencies=[auth], status_code=201)
+    def add_device(data: DeviceInput):
+        if data.base_id not in PRESETS:
+            raise HTTPException(422, 'O modelo base deve ser um preset oficial do Playwright')
+        return store.create_custom_device(data.label, data.base_id, data.width, data.height)
+
+    @app.delete('/api/devices/{device_id}', dependencies=[auth])
+    def delete_device(device_id: str):
+        try:
+            deleted = store.delete_custom_device(device_id)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        if not deleted:
+            raise HTTPException(404, 'Modelo personalizado não encontrado')
+        return {'deleted': True}
 
     @app.get('/api/profiles', dependencies=[auth])
     def list_profiles():
@@ -149,7 +180,7 @@ def create_app(data_dir=None, headless=False):
         return result
 
     def check_profile(data: ProfileInput, ignore_id=None):
-        if data.device_id not in PRESETS:
+        if data.device_id not in PRESETS and not store.get_custom_device(data.device_id):
             raise HTTPException(422, 'Dispositivo indisponível')
         if data.proxy_id:
             if not store.get_proxy(data.proxy_id):
@@ -290,10 +321,14 @@ def create_app(data_dir=None, headless=False):
         from playwright import __file__ as pwfile
         import platform
         import shutil as sh
+        import psutil
+        vm = psutil.virtual_memory()
         return {'system': platform.platform(), 'python': platform.python_version(),
                 'playwright_location': str(Path(pwfile).parent),
                 'chromium_override': bool(os.getenv('NEXORA_CHROMIUM_PATH')),
                 'chromium_system': sh.which('chromium') or sh.which('chrome') or 'não localizado',
                 'headless': headless, 'data_dir': str(store.root),
+                'ram_total_mb': round(vm.total / (1024**2)), 'ram_available_mb': round(vm.available / (1024**2)),
+                'cpu_percent': psutil.cpu_percent(interval=None), 'logical_cpu_count': psutil.cpu_count(),
                 'note': 'Emulação de navegador, não dispositivos reais. Safari depende de Playwright WebKit.'}
     return app
