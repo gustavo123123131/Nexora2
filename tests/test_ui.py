@@ -20,7 +20,7 @@ def test_dashboard_create_form_and_devices():
         errors = []
         page.on('pageerror', lambda exc: errors.append(str(exc)))
         try:
-            html=(ROOT/'ui/index.html').read_text().replace('__LOCAL_TOKEN__','mocked-token')
+            html=(ROOT/'ui/index.html').read_text(encoding='utf-8').replace('__LOCAL_TOKEN__','mocked-token')
             page.set_content(html)
             page.add_style_tag(path=str(ROOT/'ui/styles.css'))
             page.evaluate('''() => {
