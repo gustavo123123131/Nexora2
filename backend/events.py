@@ -11,3 +11,16 @@ def record(app, action, uid):
             f.write(json.dumps(item) + '\n')
     except OSError:
         pass
+
+
+def recent(app):
+    from collections import deque
+    path = app.state.db.root / 'events.jsonl'
+    if not path.exists():
+        return list(reversed(app.state.events[-300:]))
+    try:
+        with path.open(encoding='utf-8') as stream:
+            records = deque(stream, maxlen=300)
+        return [json.loads(line) for line in reversed(records) if line.strip()]
+    except (OSError, ValueError):
+        return list(reversed(app.state.events[-300:]))
