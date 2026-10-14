@@ -1,6 +1,7 @@
 """Dashboard, device presets, diagnostics and preferences."""
 import os
 import platform
+import psutil
 from pathlib import Path
 from fastapi import APIRouter, Request
 
@@ -42,11 +43,21 @@ async def update_settings(request: Request, payload: Settings):
 async def diagnostics(request: Request):
     runner = request.app.state.runner
     driver = await runner.ensure()
+    children = psutil.Process().children(recursive=True)
+    rss = 0
+    for proc in children:
+        try:
+            rss += proc.memory_info().rss
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
     return {"platform": platform.platform(), "cpu_threads": os.cpu_count(),
             "chromium_installed": Path(driver.chromium.executable_path).exists(),
             "webkit_installed": Path(driver.webkit.executable_path).exists(),
             "storage": str(request.app.state.db.root),
             "running": len(runner.running),
+            "child_processes": len(children),
+            "child_process_rss_mb": round(rss / 1048576),
+            "available_ram_mb": round(psutil.virtual_memory().available / 1048576),
             "note": "Emulação Playwright; não representa aparelho físico nem Safari do iOS."}
 
 
