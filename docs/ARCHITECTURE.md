@@ -40,4 +40,4 @@ Suporte de proxy: HTTP(S) com autenticação quando aceita pelo motor; SOCKS5 se
 
 ## Limites conhecidos
 
-A interface é uma aplicação web local acessada no desktop, ainda sem instalador nativo. Não houve benchmark de RAM/CPU, e `max_active` não monitora memória em tempo real. A recuperação de processos após encerramento abrupto do sistema e logs persistentes precisam de validação adicional. Perfis não simulam centenas de aparelhos físicos.
+A interface é uma aplicação web local acessada no desktop, ainda sem instalador nativo. Não houve benchmark de RAM/CPU, e `max_active` não monitora memória em tempo real. A recuperação de processos após encerramento abrupto do sistema precisa de validação adicional; eventos de operações persistem em events.jsonl, mas não formam um rastreador completo de erros. Perfis não simulam centenas de aparelhos físicos.
