@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+.nexora-data/
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+*.key
+playwright-report/
+test-results/
+.DS_Store
