@@ -52,4 +52,5 @@ async def diagnostics(request: Request):
 
 @router.get("/logs")
 async def logs(request: Request):
-    return list(reversed(request.app.state.events[-300:]))
+    from .events import recent
+    return recent(request.app)
