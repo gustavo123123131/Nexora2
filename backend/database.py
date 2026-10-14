@@ -1,5 +1,6 @@
 """Durable JSON records in local SQLite (passwords are never stored here)."""
 import json
+from contextlib import contextmanager
 import sqlite3
 import threading
 from pathlib import Path
@@ -17,10 +18,15 @@ class Database:
         if not self.one("settings", "settings"):
             self.save("settings", {"id": "settings", "max_active": 3, "warn_duplicate_proxy": True})
 
+    @contextmanager
     def connect(self):
         db = sqlite3.connect(str(self.path), timeout=30)
         db.row_factory = sqlite3.Row
-        return db
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def all(self, kind):
         with self.lock, self.connect() as db:
