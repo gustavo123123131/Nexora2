@@ -16,3 +16,14 @@ Implementação independente FastAPI + Playwright + SQLite, com armazenamento de
 ## Limites
 
 Emulação Playwright usa viewport, propriedades móveis, toque, UA de presets documentados e motores Chromium/WebKit; **não** emula firmware, sensores, telephony, hardware, Safari iOS real ou o fingerprint de dispositivos físicos. Proxy SOCKS5 e HTTP configuráveis; sites HTTPS usam túnel CONNECT ao usar proxy HTTP. HTTPS como transporte até o próprio proxy (TLS proxy) não foi validado/suportado nesta versão. Não há ocultação de automação nem bypass de antifraude.
+
+## Verificação adicional do ZIP desta conversa: (10)
+
+Também foi examinado diretamente `_proxybet_research(10).zip` em 14/10/2026, sem extrair seus dumps sensíveis: 514,81 MB compactados, **8.647 entradas** e aproximadamente **1,39 GB** de conteúdo descompactado. O inventário corresponde à estrutura já descrita acima.
+
+- `asar_extracted_20260824/package.json`: aplicação `proxybet`, versão `2.5.10`, campo `license: MIT`, dependências Electron/bytenode/lz4-napi e outras.
+- `dist/main.js` inicia o launcher ou o processo de instância; `dist/app/main.js` depende de `content.asar.enc`, executa código bytecode via `bytenode` e inclui validação de licença. O conteúdo protegido **não está disponível como fonte aberta auditável** neste arquivo.
+- `dist/app/preload.js` confirma nomes de contratos IPC de sessões, proxies e tags, mas não a implementação interna dos serviços.
+- Não foi identificada licença principal separada para o núcleo proprietário no inventário. O atributo MIT do `package.json` isoladamente **não autoriza concluir que os blobs protegidos e dumps podem ser redistribuídos**.
+
+**Decisão:** nenhum código, recurso protegido, bytecode, dump ou sessão do ZIP (10) foi incorporado ao Nexora Mobile. Os módulos novos continuam sendo implementação independente. Os contratos IPC observáveis servem apenas como informação arquitetural, não como garantia de funcionamento nem autorização para cópia.
