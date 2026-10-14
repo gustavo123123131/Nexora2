@@ -19,6 +19,8 @@ async def valid_profile(app, payload):
     except ValidationError as exc:
         raise HTTPException(422, exc.errors(include_url=False)) from None
     data = model.model_dump()
+    if (data["viewport_width"] is None) != (data["viewport_height"] is None):
+        raise HTTPException(422, "Viewport width and height must be supplied together")
     try:
         ZoneInfo(data["timezone"])
     except ZoneInfoNotFoundError:
