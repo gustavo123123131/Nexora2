@@ -57,6 +57,7 @@ class BrowserManager:
         if available_mb < self.store.settings()['min_free_mb']:
             raise ValueError(f'Memória insuficiente: {available_mb} MB livres. Reduza os perfis ativos.')
         self._set(profile_id, 'starting')
+        ctx = None
         try:
             p = self._get_playwright()
             preset, device = resolve(p, item['device_id'], self.store)
@@ -64,7 +65,7 @@ class BrowserManager:
             device.update(viewport={'width': item['width'], 'height': item['height']},
                           locale=item['locale'], timezone_id=item['timezone'])
             engine = getattr(p, preset['engine'])
-            opts = {'headless': self.headless, **device, 'user_data_dir':
+            opts = {'headless': self.headless, 'timeout': 60000, **device, 'user_data_dir':
                     str(self.store.profiles_dir / profile_id)}
             # Browser executable discovery is opt-in for Chromium (system install)
             # to avoid downloading Chromium twice on some Linux distributions.
@@ -85,6 +86,15 @@ class BrowserManager:
             self.store.log('info', 'browser', f'Perfil {profile_id} iniciado')
             return {'status': 'running'}
         except Exception as exc:
+            # A browser may have launched successfully before new_page()/on()
+            # failed. Always close that context, otherwise a detached process
+            # can remain alive and lock its persistent user-data directory.
+            self._contexts.pop(profile_id, None)
+            if ctx is not None:
+                try:
+                    ctx.close()
+                except Exception:
+                    pass  # Keep the original failure; never log driver secrets.
             self._set(profile_id, 'stopped')
             self.store.log('error', 'browser', f'Perfil {profile_id}: {safe_error(exc)}')
             if isinstance(exc, ValueError):
